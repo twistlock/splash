@@ -68,6 +68,7 @@ To support certain features splash will run simple commands on the Lambda behind
 \t-> Enter '!help' to display this message while in a shell session
 
 # Known Limitations:
+\t-> Currently only works with open API Gateway endpoints.
 \t-> Does not support environment variables.
 \t-> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
 \tIf the compressed file is still too large, consider running 'curl -F ‘data=@path/to/lambda/file’ <your-server-address>' in splash.
