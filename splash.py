@@ -59,17 +59,16 @@ To support certain features splash will run simple commands on the Lambda behind
 \t-> splash config addr <lambda-addr>
 \t-> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
 \t-> splash config color <true/false> - enable/disable coloring
-\t
 
 # Special Commands:
 \t-> Enter 'q' to exit. 
 \t-> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
-\t-> Enter '!pt(b) <local-path> <lambda-abs-path>' to put a file on the Lamda, '--ptb' is for binary mode.
+\t-> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lambda, '--ptb' is for binary mode.
 \t-> Enter "!cwd" to reset the cwd.
 \t-> Enter '!help' to display this message while in a shell session
 
 # Known Limitations:
-\t-> Does not support enviroment variables.
+\t-> Does not support environment variables.
 \t-> Does not support switching users.
 \t-> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
 \tIf the compressed file is still too large, consider running 'curl -F ‘data=@path/to/lambda/file’ <your-server-address>' in splash.
