@@ -122,9 +122,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking,
     # Construct displayed shell prefix
     lambda_name = lambda_addr.split("/")[-1]
     if color:
-        lambda_name_colored = colored(lambda_name + ":", "green")
-        usr_colored = colored("{}".format(usr), "cyan")
-        prefix = usr_colored + "@" +lambda_name_colored
+        prefix = colored(usr + "@" + lambda_name, "green", attrs=["bold"])  + ":"
     else:
         prefix = usr + "@" +lambda_name + ":"
 
@@ -136,7 +134,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking,
 
         # Get usr input
         if color:
-            displayed_str = prefix + colored(cwd, "yellow", attrs=["bold"]) + "$ "
+            displayed_str = prefix + colored(cwd, "blue", attrs=["bold"]) + "$ "
         else:
             displayed_str = prefix + cwd + "$ "
         try:

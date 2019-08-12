@@ -13,7 +13,7 @@ For curious fellows who want to hack on AWS Lambda's infrastructure.
 - Supports CWD
 - File transfers between the local machine and the Lambda
 - Tracking Lambda writable file system (/tmp) resets 
-- Pretty colors (based on [dracula](https://draculatheme.com/terminal/))
+- Pretty colors
 
 # Why Not a Reverse Shell
 Lambda is priced according to run time. A reverse shell running for a couple of minutes will be costly.
