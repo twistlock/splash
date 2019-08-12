@@ -21,13 +21,13 @@ Additionally, after some time the Lambda will timeout and the reverse shell conn
 
 # Installation
 ```
-git clone https://github.com/twistlock/splash && cd splash
+$ git clone https://github.com/twistlock/splash && cd splash
 
 # Deploy ./deploy/lex.zip to an AWS Lambda through the aws CLI or the web UI.
 # set Runtime:Python3.7, Handler:lex.handler
 
-./splash config addr <Lambda-addr>
-./splash  # run splash
+$ ./splash config addr <Lambda-addr>
+$ ./splash  # run splash
 ```
 
 # Components
