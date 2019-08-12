@@ -78,6 +78,7 @@ To support certain features splash will run simple commands on the Lambda behind
   -> Enter '!help' to display this message while in a shell session
 
 # Known Limitations:
+  -> Currently only works with open API Gateway endpoints.
   -> Does not support enviroment variables.
   -> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
   If the file is still too large, consider running 'curl -F ‘data=@path/to/lambda/file’ <your-server-address>' in splash.
@@ -87,3 +88,6 @@ To support certain features splash will run simple commands on the Lambda behind
     * cd into an absolute path with '..' or '.' isn't supported (i.e. "cd /tmp/../tmp")
     * splash can get 'stuck' in a deleted directory, run !cwd to reset CWD
 ```
+
+# TODO
+- Add support for API Gateway authentication (API Key, IAM)
