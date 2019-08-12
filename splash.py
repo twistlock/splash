@@ -69,7 +69,6 @@ To support certain features splash will run simple commands on the Lambda behind
 
 # Known Limitations:
 \t-> Does not support environment variables.
-\t-> Does not support switching users.
 \t-> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
 \tIf the compressed file is still too large, consider running 'curl -F ‘data=@path/to/lambda/file’ <your-server-address>' in splash.
 \t-> Limited support for CWD tracking. 
