@@ -9,6 +9,8 @@ A pseudo shell re-invoking the Lambda for each command.
 
 For curious fellows who want to hack on AWS Lambda's infrastructure. 
 
+![](demo/splash.gif)
+
 # Features
 - Supports CWD
 - File transfers between the local machine and the Lambda
