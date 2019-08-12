@@ -36,8 +36,8 @@ $ git clone https://github.com/twistlock/splash && cd splash
 # Deploy ./deploy/lex.zip to an AWS Lambda through the aws CLI or the web UI.
 # set Runtime:Python3.7, Handler:lex.handler, and add an API Gateway trigger.
 
-$ ./splash config addr <Lambda-addr>
-$ ./splash  # run splash
+$ ./splash.py config addr <Lambda-addr>
+$ ./splash.py  # run splash
 ```
 
 # Components
