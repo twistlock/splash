@@ -1,3 +1,4 @@
 test.py
 __pycache__/
 lib/__pycache__/
+.DS_Store
