@@ -19,7 +19,15 @@ For curious fellows who want to hack on AWS Lambda's infrastructure.
 Lambda is priced according to run time. A reverse shell running for a couple of minutes will be costly.
 Additionally, after some time the Lambda will timeout and the reverse shell connection will be closed.
 
-# Installation
+# Getting Started
+**Dependencies**
+
+Python3, termcolor.
+```
+$ sudo apt update && sudo apt install python3 python3-pip
+$ pip3 install termcolor
+```
+**Install and Setup**
 ```
 $ git clone https://github.com/twistlock/splash && cd splash
 
