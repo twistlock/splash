@@ -74,7 +74,6 @@ To support certain features splash will run simple commands on the Lambda behind
   -> Enter 'q' to exit. 
   -> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
   -> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lamda, '--ptb' is for binary mode.
-  -> Enter "!cwd" to reset the cwd.
   -> Enter '!help' to display this message while in a shell session
 
 # Known Limitations:
@@ -86,7 +85,7 @@ To support certain features splash will run simple commands on the Lambda behind
     * Supported by tracking 'cd' commands to identify the CWD, and then inserting "cd CWD; " to the start of shell commands.
     * Piping commands with 'cd' isn't supported (i.e. "cd /tmp ; echo A")
     * cd into an absolute path with '..' or '.' isn't supported (i.e. "cd /tmp/../tmp")
-    * splash can get 'stuck' in a deleted directory, run !cwd to reset CWD
+    * splash can get 'stuck' in a deleted directory, run 'cd' to reset CWD
 ```
 
 # TODO

@@ -64,7 +64,6 @@ To support certain features splash will run simple commands on the Lambda behind
 \t-> Enter 'q' to exit. 
 \t-> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
 \t-> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lambda, '--ptb' is for binary mode.
-\t-> Enter "!cwd" to reset the cwd.
 \t-> Enter '!help' to display this message while in a shell session
 
 # Known Limitations:
@@ -76,7 +75,7 @@ To support certain features splash will run simple commands on the Lambda behind
 \t\t* Supported by tracking 'cd' commands to identify the CWD, and then inserting "cd CWD; " to the start of shell commands.
 \t\t* Piping commands with 'cd' isn't supported (i.e. "cd /tmp ; echo A")
 \t\t* cd into an absolute path with '..' or '.' isn't supported (i.e. "cd /tmp/../tmp")
-\t\t* splash can get 'stuck' in a deleted directory, run !cwd to reset CWD
+\t\t* splash can get 'stuck' in a deleted directory, run 'cd' to reset CWD
 """
 
 USAGE = """# Usage:
@@ -161,7 +160,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking,
             handle_putfile(stripped_inpt, lambda_addr, cwd)
 
         # Reset CWD
-        elif stripped_inpt == '!cwd':
+        elif stripped_inpt == 'cd':
             cwd = lambda_original_cwd
 
         # Reset CWD
