@@ -44,8 +44,6 @@ def handler(event, context):
             result, out = run_putfile(data["path"], data["content"], data["mode"])
             return construct_putfile_response(result, out)
 
-        else:
-            construct_response(LEXResult.ERR, "[!] Unknown action...")
 
     except Exception as e:
         return construct_exception_response(e)
@@ -78,7 +76,7 @@ def parse_action(event):
             if PUTFILE_ACTION in body:
                 return PUTFILE_ACTION, body[PUTFILE_ACTION]
             else:
-                raise Exception("[!] parse_action: puyfile request does not include data")
+                raise Exception("[!] parse_action: putfile request does not include data")
         else:
             raise Exception("[!] parse_action: Unknown action: {}".format(body["action"]))
 
@@ -144,7 +142,7 @@ def run_getfile(file, mode):
         content_len, encoded_len, len(tar_content), len(tar_encoded))
     return LEXResult.ERR, err_str
 
-# returns success, output
+# returns LEXResult, output
 def run_putfile(path, content, writemode):
 
     decoded = base64.b64decode(str(content))
