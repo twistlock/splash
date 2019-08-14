@@ -66,6 +66,7 @@ To support certain features splash will run simple commands on the Lambda behind
 -------------------------------------------------------------------
 
 # Configuration:
+  -> splash config - get config
   -> splash config addr <lambda-addr>
   -> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
   -> splash config color <true/false> - enable/disable coloring

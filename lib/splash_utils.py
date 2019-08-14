@@ -40,6 +40,10 @@ def get_config():
     except json.JSONDecodeError:
         return {}
 
+def print_config():
+    config = get_config()
+    print(json.dumps(config, indent=4, sort_keys=True))
+
 def get_lambda_addr():
     config = get_config()
     if LAMBDA_ADDR_KEY in config:

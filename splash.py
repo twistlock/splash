@@ -56,6 +56,7 @@ To support certain features splash will run simple commands on the Lambda behind
 -------------------------------------------------------------------
 
 # Configuration:
+\t-> splash config - get configuration
 \t-> splash config addr <lambda-addr>
 \t-> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
 \t-> splash config color <true/false> - enable/disable coloring
@@ -80,6 +81,7 @@ To support certain features splash will run simple commands on the Lambda behind
 
 USAGE = """# Usage:
   -> splash
+  -> splash config  # get config 
   -> splash config addr <lambda-addr>
   -> splash config trackfs <true/false>
   -> splash config color <true/false>"""
@@ -474,9 +476,11 @@ def handle_not_shell_use_cases():
     # Config
     elif argv[1] == CONFIG:
         # Get config cmd
-        config_cmd = ""
-        if len(argv) >= 3:
-            config_cmd = argv[2]
+        if len(argv) == 2:
+            print_config()
+            return
+        
+        config_cmd = argv[2]
 
         if config_cmd not in CONFIG_CMDS:
             print(INVALID_CONFIG_CMD.format(config_cmd))
@@ -488,7 +492,7 @@ def handle_not_shell_use_cases():
             return
 
 
-        param_list = argv[3:] # pass as list to support multiple args in the future
+        param_list = argv[3:] # pass as list to support config commands multiple args in the future
         config_func = CONFIG_CMDS[config_cmd]
 
         # Run appropriate config func
