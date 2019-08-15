@@ -4,7 +4,7 @@ from lib.lcmd import send_command
 from lib.lfiles import *
 from lib.splash_utils import *
 from lib.general_utils import *
-from lib.colors import colored
+from lib.colors import colored, colored_for_input
 
 import readline  # changes python's input function to allow shell like operations (e.g. last command)
 import base64
@@ -125,7 +125,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
     # Construct displayed shell prefix
     lambda_name = lambda_addr.split("/")[-1]
     if USE_COLOR:
-        prefix = colored(usr + "@" + lambda_name, ["GREEN", "BOLD"])  + ":"
+        prefix = colored_for_input(usr + "@" + lambda_name, ["GREEN", "BOLD"])  + ":"
     else:
         prefix = usr + "@" +lambda_name + ":"
 
@@ -137,7 +137,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
 
         # Get usr input
         if USE_COLOR:
-            displayed_str = prefix + colored(cwd, ["BLUE", "BOLD"]) + "$ "
+            displayed_str = prefix + colored_for_input(cwd, ["BLUE", "BOLD"]) + "$ "
         else:
             displayed_str = prefix + cwd + "$ "
         try:
