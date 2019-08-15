@@ -301,6 +301,7 @@ def getfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
             writefile(local_path, write_mode, decoded_output) # write received file
         except IOError:
             print_info("Couldn't open local file {} for writing".format(local_path))
+            return
 
         # Print to user
         if result == LEXResult.OK:
