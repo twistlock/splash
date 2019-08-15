@@ -9,7 +9,7 @@ CONFIG_FILENAME = ".splash_config"
 HOME = str(Path.home())
 CONFIG_FILE_PATH = HOME + "/" + ".splash_config"
 
-ERR_PREFIX = "# splash: "
+INFO_PREFIX = "# splash: "
 
 LAMBDA_ADDR_KEY = "addr"
 FS_TRACKING_KEY= "trackfs"

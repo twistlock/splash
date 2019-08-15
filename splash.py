@@ -18,6 +18,7 @@ CONFIG = "config"
 
 DEFAULT_TRACK_FS = False    # an option to track if the filesystem changed after each command, slows splash significantly.
 DEFAULT_COLOR = True        # present shell with color by default
+USE_COLOR = DEFAULT_COLOR
 
 INDICATOR_DEFAULT_PATH = "/tmp/.splash_fs_state_indicator.do_not_delete" 
 NEW_FS = True
@@ -87,7 +88,7 @@ USAGE = """# Usage:
   -> splash config color <true/false>"""
 
 
-def main(lambda_addr, try_to_fs_track, color):
+def main(lambda_addr, try_to_fs_track):
 
     try:
         print_info("Talking to {}".format(lambda_addr))
@@ -111,19 +112,19 @@ def main(lambda_addr, try_to_fs_track, color):
         continue_fs_tracking = try_to_fs_track and continue_fs_tracking
 
         # Run shell
-        shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking, color)
+        shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
 
 
     except (requests.exceptions.InvalidURL, requests.exceptions.MissingSchema) as urlException:
         print("# Invalid lambda url: {}".format(lambda_addr))
 
 
-def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking, color):
+def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking):
     is_new_fs_instance = False # for first time in loop
 
     # Construct displayed shell prefix
     lambda_name = lambda_addr.split("/")[-1]
-    if color:
+    if USE_COLOR:
         prefix = colored(usr + "@" + lambda_name, "green", attrs=["bold"])  + ":"
     else:
         prefix = usr + "@" +lambda_name + ":"
@@ -135,7 +136,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking,
             is_new_fs_instance = False 
 
         # Get usr input
-        if color:
+        if USE_COLOR:
             displayed_str = prefix + colored(cwd, "blue", attrs=["bold"]) + "$ "
         else:
             displayed_str = prefix + cwd + "$ "
@@ -466,6 +467,15 @@ def contains_shell_control_chars(cmd):
     return False
 
 
+
+def print_info(msg):
+    if USE_COLOR:
+        print(colored(INFO_PREFIX, "magenta") + msg)
+    else:
+        print(INFO_PREFIX + msg)
+
+
+
 def handle_not_shell_use_cases():
     """
     * Handle 'config' and 'help' commands
@@ -502,12 +512,7 @@ def handle_not_shell_use_cases():
     else:
         print(USAGE)
 
-def print_info(msg):
-    global color
-    if color:
-        print(colored(ERR_PREFIX, "magenta") + msg)
-    else:
-        print(ERR_PREFIX + msg)
+
 
 if __name__ == "__main__":
     if len(argv) > 1:
@@ -526,11 +531,8 @@ if __name__ == "__main__":
     if FS_TRACKING_KEY in config:
         fs_tracking = config[FS_TRACKING_KEY]
 
-    # get color config
-    global color  # for print_info
-    color = DEFAULT_COLOR
     if COLOR_KEY in config:
-        color = config[COLOR_KEY]
+        USE_COLOR = config[COLOR_KEY]
 
-    main(lambda_addr, fs_tracking, color)
+    main(lambda_addr, fs_tracking)
 
