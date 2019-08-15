@@ -4,11 +4,11 @@ from lib.lcmd import send_command
 from lib.lfiles import *
 from lib.splash_utils import *
 from lib.general_utils import *
+from lib.colors import colored
 
 import readline  # changes python's input function to allow shell like operations (e.g. last command)
 import base64
 from sys import argv
-from termcolor import colored
 
 
 EXIT_CMDS = ["q", "exit"]
@@ -125,7 +125,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
     # Construct displayed shell prefix
     lambda_name = lambda_addr.split("/")[-1]
     if USE_COLOR:
-        prefix = colored(usr + "@" + lambda_name, "green", attrs=["bold"])  + ":"
+        prefix = colored(usr + "@" + lambda_name, ["GREEN", "BOLD"])  + ":"
     else:
         prefix = usr + "@" +lambda_name + ":"
 
@@ -137,7 +137,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
 
         # Get usr input
         if USE_COLOR:
-            displayed_str = prefix + colored(cwd, "blue", attrs=["bold"]) + "$ "
+            displayed_str = prefix + colored(cwd, ["BLUE", "BOLD"]) + "$ "
         else:
             displayed_str = prefix + cwd + "$ "
         try:
@@ -470,7 +470,7 @@ def contains_shell_control_chars(cmd):
 
 def print_info(msg):
     if USE_COLOR:
-        print(colored(INFO_PREFIX, "magenta") + msg)
+        print(colored(INFO_PREFIX, ["HEADER"]) + msg)
     else:
         print(INFO_PREFIX + msg)
 

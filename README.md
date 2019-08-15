@@ -24,10 +24,10 @@ Additionally, after some time the Lambda will timeout and the reverse shell conn
 # Getting Started
 **Dependencies**
 
-Python3, termcolor.
+Python3, requests.
 ```
 $ sudo apt update && sudo apt install python3 python3-pip
-$ pip3 install termcolor requests
+$ pip3 install requests
 ```
 **Install and Setup**
 ```
