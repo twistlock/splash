@@ -71,7 +71,7 @@ To support certain features splash will run simple commands on the Lambda behind
 \t-> Currently only works with open API Gateway endpoints.
 \t-> Does not support environment variables.
 \t-> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
-\tIf the compressed file is still too large, consider running 'curl -F ‘data=@path/to/lambda/file’ <your-server-address>' in splash.
+\tIf the compressed file is still too large, consider running 'curl -F data=@path/to/lambda/file <your-server-address:port>' in splash.
 \t-> Limited support for CWD tracking. 
 \t\t* Supported by tracking 'cd' commands to identify the CWD, and then inserting "cd CWD; " to the start of shell commands.
 \t\t* Piping commands with 'cd' isn't supported (i.e. "cd /tmp ; echo A")
