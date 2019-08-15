@@ -27,7 +27,7 @@ Additionally, after some time the Lambda will timeout and the reverse shell conn
 Python3, termcolor.
 ```
 $ sudo apt update && sudo apt install python3 python3-pip
-$ pip3 install termcolor
+$ pip3 install termcolor requests
 ```
 **Install and Setup**
 ```
