@@ -6,20 +6,20 @@ from lib.splash_utils import *
 from lib.general_utils import *
 from lib.colors import colored, colored_for_input
 
-import readline  # changes python's input function to allow shell like operations (e.g. last command)
+import readline  # changes python's input function to add shell like features (e.g. command history)
 import base64
 from sys import argv
 
-
-EXIT_CMDS = ["q", "exit"]
+# Commands
 HELP = ["-h", "--h", "--help", "help"]
 CONFIG = "config"
 
-
+# Default config
 DEFAULT_TRACK_FS = False    # an option to track if the filesystem changed after each command, slows splash significantly.
-DEFAULT_COLOR = True        # present shell with color by default
-USE_COLOR = DEFAULT_COLOR
+DEFAULT_USE_COLOR = True        # present shell with color by default
+USE_COLOR = DEFAULT_USE_COLOR
 
+# Consts
 INDICATOR_DEFAULT_PATH = "/tmp/.splash_fs_state_indicator.do_not_delete" 
 NEW_FS = True
 SAME_FS = False
@@ -28,15 +28,17 @@ STOP_FSTRACK = False
 
 CONTROL_CHARS = ";|&<>"
 NOT_INTERESTING = " \n\t"
-
+EXIT_CMDS = ["q", "exit"]
 EMPTY_CWD = ""
 ROOT_DIR = "/"
 
+# File IO
 READ_BINARY = "rb"
 WRITE_BINARY = "wb"
 READ = "r"
 WRITE = "w"
 
+# Printables
 INVALID_CONFIG_CMD = "# Invalid config command: '{}'"
 CONFIG_PARAM_MISSING = "# Missing parameter for 'splash config {}'"
 
@@ -89,40 +91,40 @@ USAGE = """# Usage:
 
 
 def main(lambda_addr, try_to_fs_track):
-
+    # Print welcome
+    print_info("Talking to {}".format(lambda_addr))
+    print_info("For help, enter '!help'")
+    
+    # Get Lambda's user and default working dir
     try:
-        print_info("Talking to {}".format(lambda_addr))
-        print_info("For help, enter '!help'")
-        usr, cwd = init_shell_params(lambda_addr)
-        lambda_original_cwd = cwd
-
-        # Print welcome
-
-        if try_to_fs_track:
-            print_info("FS tracking ON")
-
-        # Check if Lambda fs state was preserved
-        is_new_fs_instance, continue_fs_tracking = check_is_new_fs_instance(INDICATOR_DEFAULT_PATH, lambda_addr) # checks if /tmp was reset
-        if continue_fs_tracking:  # Only print if there was no error and fs tracking is resumed
-            if is_new_fs_instance:
-                print_info("Lambda filesystem was reset / First time running splash with this Lambda\n")
-            else:
-                print_info("Lambda filesystem state from previous splash session is preserved\n")
-
-        continue_fs_tracking = try_to_fs_track and continue_fs_tracking
-
-        # Run shell
-        shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
-
-
+        usr, cwd = init_shell_params(lambda_addr)    
     except (requests.exceptions.InvalidURL, requests.exceptions.MissingSchema) as urlException:
         print("# Invalid lambda url: {}".format(lambda_addr))
+        return
+    lambda_original_cwd = cwd
+    
+    if try_to_fs_track:
+        print_info("FS tracking ON")
+
+    # Check if Lambda fs state from last session was preserved
+    is_new_fs_instance, continue_fs_tracking = check_is_new_fs_instance(INDICATOR_DEFAULT_PATH, lambda_addr)
+    if continue_fs_tracking:  # Only print if there was no error
+        if is_new_fs_instance:
+            print_info("Lambda filesystem was reset / First time running splash with this Lambda\n")
+        else:
+            print_info("Lambda filesystem state from previous splash session is preserved\n")
+
+    # continue tracking if the user config asked for it AND there was no error
+    continue_fs_tracking = try_to_fs_track and continue_fs_tracking 
+    
+    # Run shell
+    shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
 
 
 def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking):
     is_new_fs_instance = False # for first time in loop
 
-    # Construct displayed shell prefix
+    # Construct shell prefix as'USR@MACHINE:CWD$ '
     lambda_name = lambda_addr.split("/")[-1]
     if USE_COLOR:
         prefix = colored_for_input(usr + "@" + lambda_name, ["GREEN", "BOLD"])  + ":"
@@ -130,16 +132,18 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
         prefix = usr + "@" +lambda_name + ":"
 
     while True:
-        # Check if fs was reset
+        # Alert if we identified a filesystem reset
         if continue_fs_tracking and is_new_fs_instance:
             print_info("Function filesystem was reset")
             is_new_fs_instance = False 
 
-        # Get usr input
+        # Append CWD to prefix 
         if USE_COLOR:
             displayed_str = prefix + colored_for_input(cwd, ["BLUE", "BOLD"]) + "$ "
         else:
             displayed_str = prefix + cwd + "$ "
+        
+        # Get user input
         try:
             inpt = input(displayed_str)
         except KeyboardInterrupt: # for ctrl+c
@@ -166,26 +170,26 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
         elif stripped_inpt == 'cd':
             cwd = lambda_original_cwd
 
-        # Reset CWD
+        # Print help
         elif stripped_inpt == '!help':
             print(HELP_STR)
+            continue
 
         # Ok so this is a regular shell command
         else:
-
-            # make sure to cd to CWD before running command 
-            if cwd != EMPTY_CWD and cwd != lambda_original_cwd: 
+            # make sure to cd to CWD before running the command 
+            if cwd != EMPTY_CWD and cwd != lambda_original_cwd:  # no need if the CWD is the lambda_original_cwd
                 cmd = "cd " + cwd + " && " + inpt
             else:
-                cmd = inpt # no need if the CWD is the lambda_original_cwd
+                cmd = inpt
 
-            # Warp command with bash and send CWD to lambda
+            # Warp command with bash and send to lambda
             bash_cmd =  ["bash", "-c", cmd]
             result, output = send_command(bash_cmd, lambda_addr)
             if result == LEXResult.LEX_EXCEPTION:
                 print_info("LEX (Lambda Executor) encountered an unexpected exception while handling the bash command:\n" + output)
                 continue
-
+                
             print(output, end = '')  # don't add newline
 
             # Try tracking the CWD
@@ -217,7 +221,7 @@ def init_shell_params(lambda_addr):
     return usr, cwd
 
 # Checks indicator file to see if filesystem state is preserved.     
-# returns is_new_fs_instance, continue_fs_tracking
+# Returns is_new_fs_instance, no_tracking_error
 def check_is_new_fs_instance(indicator_path, lambda_addr):
     # Check is indicator file exists
     stat_cmd = ["stat", indicator_path]
@@ -226,20 +230,19 @@ def check_is_new_fs_instance(indicator_path, lambda_addr):
         return SAME_FS, CONT_FSTRACK # Indicator file exists
     if result == LEXResult.LEX_EXCEPTION:
         print_info("Failed to stat filesystem state file, from here on FS tracking is disabled. Exception:\n" + output)
-        return SAME_FS, STOP_FSTRACK
+        return SAME_FS, STOP_FSTRACK # We return SAME_FS so nothing will be printed aside from the error message
 
     # Ok so new instance, lets create the indicator
-
     cmd = "touch " + indicator_path
     bash_cmd =  ["bash", "-c", cmd]
     result, output = send_command(bash_cmd, lambda_addr)
 
-    # Check if touch failed
+    # Check if creating indicator file failed
     if result != LEXResult.OK:
         print_info("Failed to create a new indicator file, from here on FS tracking is disabled. Error : " + output)
-        return NEW_FS, STOP_FSTRACK 
+        return NEW_FS, STOP_FSTRACK # new fs, creating indicator failed
 
-    return NEW_FS, CONT_FSTRACK  # new fs, touch succeeded
+    return NEW_FS, CONT_FSTRACK  # new fs, creating indicator succeeded
 
 
 def handle_getfile(inpt, lambda_addr, cwd):
@@ -275,12 +278,13 @@ def handle_putfile(inpt, lambda_addr, cwd):
     else:
         putfile(lambda_path, local_path, READ, WRITE, lambda_addr)
 
-
+        
+# Recieves file from Lambda. Prints outcome. No return value
 def getfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
     print_info("Getting file {}, for large files this might take a few seconds...".format(lambda_path))
     result, output = send_getfile_command(lambda_path, read_mode, lambda_addr)
 
-    # LEXResult.ERR: is for known errors (i.e. file doesn't exist)
+    # LEXResult.ERR is for known errors (i.e. file doesn't exist)
     if result == LEXResult.ERR:
         print_info(output)  
     # LEX encountered and unexpected exception
@@ -311,9 +315,8 @@ def getfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
             print_info("Compressed (bz2) and copied {} from the Lambda to {} on the local machine".format(lambda_path, local_path))
 
 
-
+# Sends file to Lambda. Prints outcome. No return value
 def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
-
     # Check that file exists
     if not os.path.exists(local_path):
         print_info("[!] putfile: file '{}' doesn't exist".format(local_path))
@@ -371,12 +374,13 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
     result, output = send_putfile_command(lambda_path, encoded, write_mode, lambda_addr)
 
     if result == LEXResult.ERR:
-        print_info(output)
+        print_info(output)  # print Error info
         return
     elif result == LEXResult.LEX_EXCEPTION:
         print_info("LEX (Lambda Executor) encountered an unexpected exception while handling the putfile command:\n" + output)
         return
-
+    
+    # Prints success
     if not is_tar:
         print_info("Copied {} from the local machine to {} on the lambda".format(local_path, lambda_path))
     else:
@@ -389,8 +393,7 @@ def get_whoami(lambda_addr):
     result, output = send_command(whoami_cmd, lambda_addr)
     return result, output
 
-
-# Discover a process's pwd
+# Runs pwd on the Lambda
 def get_pwd(lambda_addr, cd_target=""):
     if cd_target: # option to cd first, mainly to let bash resolve '..', '.', etc.
         cmd = "cd " + cd_target + " ; pwd"
@@ -405,7 +408,6 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
     """
     * A simple attempt to track CWD
     * Returns the new CWD if all goes well, or EMPTY_CWD if failed to track.
-
     """
     if ("cd " not in inpt) or err: 
         # no need to track if not cd command or if command failed 
@@ -443,14 +445,13 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
             print_info("Failed to track CWD, do not trust the CWD displayed. Avoid using paths with '.', '~' and '..'")
             return EMPTY_CWD
 
-
-
-
+        
 # Check if abs_path
 def is_abs_path(path):
     if path[0] == "/":
         return True
     return False
+
 
 # Checks if command has any meaningful chars
 def is_interesting_cmd(cmd):
@@ -458,6 +459,7 @@ def is_interesting_cmd(cmd):
         if char not in NOT_INTERESTING: # at least one interesting char
             return True
     return False
+
 
 # Checks if command contains shell CONTROL_CHARS
 def contains_shell_control_chars(cmd):
@@ -467,13 +469,11 @@ def contains_shell_control_chars(cmd):
     return False
 
 
-
 def print_info(msg):
     if USE_COLOR:
         print(colored(INFO_PREFIX, ["HEADER"]) + msg)
     else:
         print(INFO_PREFIX + msg)
-
 
 
 def handle_not_shell_use_cases():
@@ -486,12 +486,12 @@ def handle_not_shell_use_cases():
 
     # Config
     elif argv[1] == CONFIG:
-        # Get config cmd
-        if len(argv) == 2:
+        # if no config cmd specified, print config
+        if len(argv) == 2: 
             print_config()
             return
         
-        config_cmd = argv[2]
+        config_cmd = argv[2] # get config cmd
 
         if config_cmd not in CONFIG_CMDS:
             print(INVALID_CONFIG_CMD.format(config_cmd))
@@ -502,8 +502,7 @@ def handle_not_shell_use_cases():
             print(USAGE)
             return
 
-
-        param_list = argv[3:] # pass as list to support config commands multiple args in the future
+        param_list = argv[3:]  # pass as list to support config cmds with multiple args in the future
         config_func = CONFIG_CMDS[config_cmd]
 
         # Run appropriate config func
@@ -511,7 +510,6 @@ def handle_not_shell_use_cases():
 
     else:
         print(USAGE)
-
 
 
 if __name__ == "__main__":
@@ -535,4 +533,3 @@ if __name__ == "__main__":
         USE_COLOR = config[COLOR_KEY]
 
     main(lambda_addr, fs_tracking)
-
