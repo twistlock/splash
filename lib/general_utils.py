@@ -1,3 +1,9 @@
+"""
+*
+* Utils required by both splash and LEX
+*
+"""
+
 import tarfile
 import os
 from enum import Enum
@@ -7,6 +13,10 @@ MAX_BODY_SIZE = MAX_PAYLOAD_SIZE - 500 # give some room for our headers
 
 
 class LEXResult(Enum):
+    """
+    * Enum of possible results from LEX (Lambda Executor)
+    
+    """
     OK = 1             # action successful
 
     ERR = 2            # for regular shell commands, indicates non-zero exit code. 

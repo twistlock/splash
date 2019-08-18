@@ -1,22 +1,13 @@
-from .general_utils import readfile, writefile, LEXResult
-
-import json
-from pathlib import Path
-from termcolor import colored
+"""
+"""
+from .general_utils import LEXResult
 
 
-CONFIG_FILENAME = ".splash_config"
-HOME = str(Path.home())
-CONFIG_FILE_PATH = HOME + "/" + ".splash_config"
+NOT_INTERESTING = " \n\t"
+CONTROL_CHARS = ";|&<>"
 
-INFO_PREFIX = "# splash: "
 
-LAMBDA_ADDR_KEY = "addr"
-FS_TRACKING_KEY= "trackfs"
-COLOR_KEY = "color"
-
-#### General funcs ####
-
+# Get result and output from LEX's response
 def parse_result_and_output(response_json, func_name):
     if "result" not in response_json:
          raise Exception("[!] {}: Lambda response body doesn't contain 'result'".format(func_name))
@@ -27,83 +18,80 @@ def parse_result_and_output(response_json, func_name):
     return LEXResult(response_json["result"]) , response_json["output"]
 
 
-#### Config funcs ####
+
+# Checks if command has any meaningful chars
+def is_interesting_cmd(cmd):
+    for char in cmd:
+        if char not in NOT_INTERESTING: # at least one interesting char
+            return True
+    return False
 
 
-def get_config():
-    try:
-        config_data = readfile(CONFIG_FILE_PATH, "r")
-    except FileNotFoundError:
-        return {}
-    try:
-        return json.loads(config_data)
-    except json.JSONDecodeError:
-        return {}
-
-def print_config():
-    config = get_config()
-    print(json.dumps(config, indent=4, sort_keys=True))
-
-def get_lambda_addr():
-    config = get_config()
-    if LAMBDA_ADDR_KEY in config:
-        return config[LAMBDA_ADDR_KEY]
-    else:
-        return None
-
-def get_fs_tracking():
-    config = get_config()
-    if FS_TRACKING_KEY in config:
-        return config[FS_TRACKING_KEY]
-    else:
-        return None
-
-def get_color():
-    config = get_config()
-    if COLOR_KEY in config:
-        return config[COLOR_KEY]
-    else:
-        return None
+# Checks if command contains shell CONTROL_CHARS
+def contains_shell_control_chars(cmd):
+    for control_char in CONTROL_CHARS:
+        if control_char in cmd:
+            return True
+    return False
 
 
-def set_lambda_addr(addr):
-    addr = addr[0]
-    config = get_config()
-    config[LAMBDA_ADDR_KEY] = addr
-    writefile(CONFIG_FILE_PATH, "w", json.dumps(config))
+# Check if abs_path
+def is_abs_path(path):
+    if path[0] == "/":
+        return True
+    return False
 
 
-def set_fs_tracking(is_track):
-    is_track = is_track[0]
-    if is_track == "true":
-        is_track = True
-    elif is_track == "false":
-        is_track = False
-    else:
-        print("[+] Usage: splash config fs_track <true/false>")
-        return
+# Printable
 
-    config = get_config()
-    config[FS_TRACKING_KEY] = is_track
-    writefile(CONFIG_FILE_PATH, "w", json.dumps(config))
+INFO_PREFIX = "# splash: "
 
+INVALID_CONFIG_CMD = "# Invalid config command: '{}'"
+CONFIG_PARAM_MISSING = "# Missing parameter for 'splash config {}'"
 
-def set_color(is_color):
-    is_color = is_color[0]
-    if is_color == "true":
-        is_color = True
-    elif is_color == "false":
-        is_color = False
-    else:
-        print("[+] Usage: splash config color <true/false>")
-        return
+HELP_STR = """
+   _____        ____        __        ___         _____      __  __   
+  / ___/       / __ \      / /       /   |       / ___/     / / / /   
+  \__ \       / /_/ /     / /       / /| |       \__ \     / /_/ /      
+ ___/ /      / ____/     / /___    / ___ |      ___/ /    / __  /      
+/____/plash /_/seudo    /_____/   /_/  |_|mbda /____/    /_/ /_/ell  
 
-    config = get_config()
-    config[COLOR_KEY] = is_color
-    writefile(CONFIG_FILE_PATH, "w", json.dumps(config))
+A pseudo shell re-invoking the Lambda for each command.
+\t -> SPLASH runs on your local machine.
+\t -> LEX (Lambda Executor) should run on your Lambda.
 
-    
-CONFIG_CMDS = {"addr": set_lambda_addr, "trackfs": set_fs_tracking, "color": set_color}
+To support certain features splash will run simple commands on the Lambda behind the scenes
+(e.g. 'whoami' to get the user name)
 
+-------------------------------------------------------------------
 
+# Configuration:
+\t-> splash config - get configuration
+\t-> splash config addr <lambda-addr>
+\t-> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
+\t-> splash config color <true/false> - enable/disable coloring
 
+# Special Commands:
+\t-> Enter 'q' to exit. 
+\t-> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
+\t-> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lambda, '--ptb' is for binary mode.
+\t-> Enter '!help' to display this message while in a shell session
+
+# Known Limitations:
+\t-> Currently only works with open API Gateway endpoints.
+\t-> Does not support environment variables.
+\t-> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
+\tIf the compressed file is still too large, consider running 'curl -F data=@path/to/lambda/file <your-server-address:port>' in splash.
+\t-> Limited support for CWD tracking. 
+\t\t* Supported by tracking 'cd' commands to identify the CWD, and then inserting "cd CWD; " to the start of shell commands.
+\t\t* Piping commands with 'cd' isn't supported (i.e. "cd /tmp ; echo A")
+\t\t* cd into an absolute path with '..' or '.' isn't supported (i.e. "cd /tmp/../tmp")
+\t\t* splash can get 'stuck' in a deleted directory, run 'cd' to reset CWD
+"""
+
+USAGE = """# Usage:
+  -> splash
+  -> splash config  # get config 
+  -> splash config addr <lambda-addr>
+  -> splash config trackfs <true/false>
+  -> splash config color <true/false>"""

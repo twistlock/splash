@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from lib.lcmd import send_command
-from lib.lfiles import *
-from lib.splash_utils import *
-from lib.general_utils import *
+from lib.lfiles import send_getfile_command, send_putfile_command
 from lib.colors import colored, colored_for_input
+from lib.general_utils import LEXResult, MAX_BODY_SIZE, readfile, writefile, create_tar_file 
+from lib.splash_utils import *
+from lib.config import *
 
+import os
 import readline  # changes python's input function to add shell like features (e.g. command history)
 import base64
 from sys import argv
@@ -19,15 +21,14 @@ DEFAULT_TRACK_FS = False    # an option to track if the filesystem changed after
 DEFAULT_USE_COLOR = True        # present shell with color by default
 USE_COLOR = DEFAULT_USE_COLOR
 
-# Consts
+# Lambda FS state tracking consts
 INDICATOR_DEFAULT_PATH = "/tmp/.splash_fs_state_indicator.do_not_delete" 
 NEW_FS = True
 SAME_FS = False
 CONT_FSTRACK = True
 STOP_FSTRACK = False
 
-CONTROL_CHARS = ";|&<>"
-NOT_INTERESTING = " \n\t"
+# Consts
 EXIT_CMDS = ["q", "exit"]
 EMPTY_CWD = ""
 ROOT_DIR = "/"
@@ -37,57 +38,6 @@ READ_BINARY = "rb"
 WRITE_BINARY = "wb"
 READ = "r"
 WRITE = "w"
-
-# Printables
-INVALID_CONFIG_CMD = "# Invalid config command: '{}'"
-CONFIG_PARAM_MISSING = "# Missing parameter for 'splash config {}'"
-
-HELP_STR = """
-   _____        ____        __        ___         _____      __  __   
-  / ___/       / __ \      / /       /   |       / ___/     / / / /   
-  \__ \       / /_/ /     / /       / /| |       \__ \     / /_/ /      
- ___/ /      / ____/     / /___    / ___ |      ___/ /    / __  /      
-/____/plash /_/seudo    /_____/   /_/  |_|mbda /____/    /_/ /_/ell  
-
-A pseudo shell re-invoking the Lambda for each command.
-\t -> SPLASH runs on your local machine.
-\t -> LEX (Lambda Executor) should run on your Lambda.
-
-To support certain features splash will run simple commands on the Lambda behind the scenes
-(e.g. 'whoami' to get the user name)
-
--------------------------------------------------------------------
-
-# Configuration:
-\t-> splash config - get configuration
-\t-> splash config addr <lambda-addr>
-\t-> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
-\t-> splash config color <true/false> - enable/disable coloring
-
-# Special Commands:
-\t-> Enter 'q' to exit. 
-\t-> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
-\t-> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lambda, '--ptb' is for binary mode.
-\t-> Enter '!help' to display this message while in a shell session
-
-# Known Limitations:
-\t-> Currently only works with open API Gateway endpoints.
-\t-> Does not support environment variables.
-\t-> File transfers are limited to the Lambda's max request/response size (6MB). splash will try to tar larger files.
-\tIf the compressed file is still too large, consider running 'curl -F data=@path/to/lambda/file <your-server-address:port>' in splash.
-\t-> Limited support for CWD tracking. 
-\t\t* Supported by tracking 'cd' commands to identify the CWD, and then inserting "cd CWD; " to the start of shell commands.
-\t\t* Piping commands with 'cd' isn't supported (i.e. "cd /tmp ; echo A")
-\t\t* cd into an absolute path with '..' or '.' isn't supported (i.e. "cd /tmp/../tmp")
-\t\t* splash can get 'stuck' in a deleted directory, run 'cd' to reset CWD
-"""
-
-USAGE = """# Usage:
-  -> splash
-  -> splash config  # get config 
-  -> splash config addr <lambda-addr>
-  -> splash config trackfs <true/false>
-  -> splash config color <true/false>"""
 
 
 def main(lambda_addr, try_to_fs_track):
@@ -220,6 +170,7 @@ def init_shell_params(lambda_addr):
 
     return usr, cwd
 
+
 # Checks indicator file to see if filesystem state is preserved.     
 # Returns is_new_fs_instance, no_tracking_error
 def check_is_new_fs_instance(indicator_path, lambda_addr):
@@ -243,7 +194,6 @@ def check_is_new_fs_instance(indicator_path, lambda_addr):
         return NEW_FS, STOP_FSTRACK # new fs, creating indicator failed
 
     return NEW_FS, CONT_FSTRACK  # new fs, creating indicator succeeded
-
 
 def handle_getfile(inpt, lambda_addr, cwd):
     args = inpt.split(' ')
@@ -387,23 +337,6 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
         print_info("Compressed and copied {} from the local machine to {} on the lambda".format(local_path, lambda_path))
 
 
-# Get shell user
-def get_whoami(lambda_addr):
-    whoami_cmd =  ["whoami"]
-    result, output = send_command(whoami_cmd, lambda_addr)
-    return result, output
-
-# Runs pwd on the Lambda
-def get_pwd(lambda_addr, cd_target=""):
-    if cd_target: # option to cd first, mainly to let bash resolve '..', '.', etc.
-        cmd = "cd " + cd_target + " ; pwd"
-    else:
-        cmd = "pwd"
-    bash_cmd =  ["bash", "-c", cmd]
-    result, output = send_command(bash_cmd, lambda_addr)
-    return result, output
-
-
 def track_cwd(previous_cwd, inpt, err, lambda_addr):
     """
     * A simple attempt to track CWD
@@ -445,28 +378,23 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
             print_info("Failed to track CWD, do not trust the CWD displayed. Avoid using paths with '.', '~' and '..'")
             return EMPTY_CWD
 
-        
-# Check if abs_path
-def is_abs_path(path):
-    if path[0] == "/":
-        return True
-    return False
+
+# Get Lambda user
+def get_whoami(lambda_addr):
+    whoami_cmd =  ["whoami"]
+    result, output = send_command(whoami_cmd, lambda_addr)
+    return result, output
 
 
-# Checks if command has any meaningful chars
-def is_interesting_cmd(cmd):
-    for char in cmd:
-        if char not in NOT_INTERESTING: # at least one interesting char
-            return True
-    return False
-
-
-# Checks if command contains shell CONTROL_CHARS
-def contains_shell_control_chars(cmd):
-    for control_char in CONTROL_CHARS:
-        if control_char in cmd:
-            return True
-    return False
+# Runs pwd on the Lambda
+def get_pwd(lambda_addr, cd_target=""):
+    if cd_target: # option to cd first, mainly to let bash resolve '..', '.', etc.
+        cmd = "cd " + cd_target + " ; pwd"
+    else:
+        cmd = "pwd"
+    bash_cmd =  ["bash", "-c", cmd]
+    result, output = send_command(bash_cmd, lambda_addr)
+    return result, output
 
 
 def print_info(msg):
@@ -528,7 +456,7 @@ if __name__ == "__main__":
     fs_tracking = DEFAULT_TRACK_FS
     if FS_TRACKING_KEY in config:
         fs_tracking = config[FS_TRACKING_KEY]
-
+    # get color config
     if COLOR_KEY in config:
         USE_COLOR = config[COLOR_KEY]
 

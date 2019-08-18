@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 from sys import argv
 
+from .config import get_lambda_addr
+from .splash_utils import parse_result_and_output
+from .general_utils import ACTION, CMD_ACTION
+
 import requests
 import json
-from .splash_utils import get_lambda_addr, parse_result_and_output
-from .general_utils import ACTION, CMD_ACTION
+
 
 
 DEFAULT_LAMBDA_ADDR = ""  # set if needed

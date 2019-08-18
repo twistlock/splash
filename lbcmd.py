@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from lib.lcmd import send_command
-from lib.splash_utils import get_lambda_addr
+from lib.config import get_lambda_addr
 
 from sys import argv
 import requests
@@ -42,7 +42,6 @@ def main():
 def send_bash_command(cmd, lambda_addr):
     bash_cmd = ["bash", "-c", cmd]
     return send_command(bash_cmd, lambda_addr)
-
 
 
 
