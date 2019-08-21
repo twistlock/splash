@@ -49,6 +49,21 @@ INFO_PREFIX = "# splash: "
 INVALID_CONFIG_CMD = "# Invalid config command: '{}'"
 CONFIG_PARAM_MISSING = "# Missing parameter for 'splash config {}'"
 
+
+IN_SHELL_COMMANDS = """# Special Commands:
+\t-> Enter 'q' to exit. 
+\t-> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
+\t-> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lambda, '--ptb' is for binary mode.
+\t-> Enter '!help' to display this message while in a shell session"""
+
+USAGE = """# Usage:
+  -> splash
+  -> splash config  # get config 
+  -> splash config addr <lambda-addr>
+  -> splash config trackfs <true/false>
+  -> splash config color <true/false>"""
+
+
 HELP_STR = """
    _____        ____        __        ___         _____      __  __   
   / ___/       / __ \      / /       /   |       / ___/     / / / /   
@@ -66,16 +81,12 @@ To support certain features splash will run simple commands on the Lambda behind
 -------------------------------------------------------------------
 
 # Configuration:
-\t-> splash config - get configuration
-\t-> splash config addr <lambda-addr>
+\t-> splash config                      - get configuration
+\t-> splash config addr <lambda-addr>   - set target Lambda
 \t-> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
-\t-> splash config color <true/false> - enable/disable coloring
+\t-> splash config color <true/false>   - enable/disable coloring
 
-# Special Commands:
-\t-> Enter 'q' to exit. 
-\t-> Enter '!gt(b) <lambda-path> <local-path>' to get a file to your local machine, '--gtb' is for binary mode.
-\t-> Enter '!pt(b) <local-path> <lambda-path>' to put a file on the Lambda, '--ptb' is for binary mode.
-\t-> Enter '!help' to display this message while in a shell session
+""" + IN_SHELL_COMMANDS +  """
 
 # Known Limitations:
 \t-> Currently only works with open API Gateway endpoints.
@@ -89,9 +100,5 @@ To support certain features splash will run simple commands on the Lambda behind
 \t\t* splash can get 'stuck' in a deleted directory, run 'cd' to reset CWD
 """
 
-USAGE = """# Usage:
-  -> splash
-  -> splash config  # get config 
-  -> splash config addr <lambda-addr>
-  -> splash config trackfs <true/false>
-  -> splash config color <true/false>"""
+
+
