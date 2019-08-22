@@ -422,7 +422,11 @@ def handle_not_shell_use_cases():
         config_cmd = argv[2] # get config cmd
 
         if config_cmd not in CONFIG_CMDS:
-            print(INVALID_CONFIG_CMD.format(config_cmd))
+            if config_cmd in HELP:
+                print(USAGE)
+            else:
+                print(INVALID_CONFIG_CMD.format(config_cmd))
+                print(USAGE)
             return 
 
         if len(argv) == 3:
