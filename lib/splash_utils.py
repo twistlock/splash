@@ -41,6 +41,11 @@ def is_abs_path(path):
         return True
     return False
 
+# trims redundant '/' from path 
+def trim_redundant_slashes(path):
+    while (len(path) > 1) and (path[-1] == "/"):
+        path = path[:-1]
+    return path
 
 # Printable
 

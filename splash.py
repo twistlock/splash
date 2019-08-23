@@ -356,7 +356,7 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
     cd_arg = inpt.split("cd")[1].strip()
     # easy case
     if is_abs_path(cd_arg): # if someone does something annoying like 'cd /tmp/../home' we won't sanitize it will be presented as the CWD.
-        return cd_arg 
+        return trim_redundant_slashes(cd_arg) 
 
     # Ok this is a relative path
     else:
@@ -367,7 +367,7 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
 
         new_cwd = os.path.join(previous_cwd, cd_arg)
         if '.' not in cd_arg and '~' not in cd_arg:
-            return new_cwd
+            return trim_redundant_slashes(new_cwd)
 
 
         # cd command used either  '..', '.' or '~'. Let's let Bash on the lambda resolve that
