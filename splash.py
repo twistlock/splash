@@ -10,6 +10,7 @@ from lib.config import *
 import os
 import readline  # changes python's input function to add shell like features (e.g. command history)
 import base64
+import requests
 from sys import argv
 
 # Commands
