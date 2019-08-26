@@ -3,7 +3,7 @@
 from lib.lcmd import send_command
 from lib.lfiles import send_getfile_command, send_putfile_command
 from lib.colors import colored, colored_for_input
-from lib.general_utils import LEXResult, MAX_BODY_SIZE, readfile, writefile, create_tar_file 
+from lib.general_utils import LEXResult, MAX_BODY_SIZE, readfile, writefile, create_tar_file
 from lib.splash_utils import *
 from lib.config import *
 
@@ -18,12 +18,12 @@ HELP = ["-h", "--h", "--help", "help"]
 CONFIG = "config"
 
 # Default config
-DEFAULT_TRACK_FS = False    # an option to track if the filesystem changed after each command, slows splash significantly.
-DEFAULT_USE_COLOR = True        # present shell with color by default
+DEFAULT_TRACK_FS = False  # an option to track if the filesystem changed after each command, slows splash significantly.
+DEFAULT_USE_COLOR = True  # present shell with color by default
 USE_COLOR = DEFAULT_USE_COLOR
 
 # Lambda FS state tracking consts
-INDICATOR_DEFAULT_PATH = "/tmp/.splash_fs_state_indicator.do_not_delete" 
+INDICATOR_DEFAULT_PATH = "/tmp/.splash_fs_state_indicator.do_not_delete"
 NEW_FS = True
 SAME_FS = False
 CONT_FSTRACK = True
@@ -43,17 +43,17 @@ WRITE = "w"
 
 def main(lambda_addr, try_to_fs_track):
     # Print welcome
-    print_info("Talking to <redacted>") #{}".format(lambda_addr))
+    print_info("Talking to <redacted>")  # {}".format(lambda_addr))
     print_info("For help, enter '!help'")
-    
+
     # Get Lambda's user and default working dir
     try:
-        usr, cwd = init_shell_params(lambda_addr)    
+        usr, cwd = init_shell_params(lambda_addr)
     except (requests.exceptions.InvalidURL, requests.exceptions.MissingSchema) as urlException:
         print("# Invalid lambda url: {}".format(lambda_addr))
         return
     lambda_original_cwd = cwd
-    
+
     if try_to_fs_track:
         print_info("FS tracking ON")
 
@@ -66,50 +66,50 @@ def main(lambda_addr, try_to_fs_track):
             print_info("Lambda filesystem state from previous splash session is preserved\n")
 
     # continue tracking if the user config asked for it AND there was no error
-    continue_fs_tracking = try_to_fs_track and continue_fs_tracking 
-    
+    continue_fs_tracking = try_to_fs_track and continue_fs_tracking
+
     # Run shell
     shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
 
 
 def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking):
-    is_new_fs_instance = False # for first time in loop
+    is_new_fs_instance = False  # for first time in loop
 
     # Construct shell prefix as'USR@MACHINE:CWD$ '
     lambda_name = lambda_addr.split("/")[-1]
     if USE_COLOR:
-        prefix = colored_for_input(usr + "@" + lambda_name, ["GREEN", "BOLD"])  + ":"
+        prefix = colored_for_input(usr + "@" + lambda_name, ["GREEN", "BOLD"]) + ":"
     else:
-        prefix = usr + "@" +lambda_name + ":"
+        prefix = usr + "@" + lambda_name + ":"
 
     while True:
         # Alert if we identified a filesystem reset
         if continue_fs_tracking and is_new_fs_instance:
             print_info("Function filesystem was reset")
-            is_new_fs_instance = False 
+            is_new_fs_instance = False
 
-        # Append CWD to prefix 
+            # Append CWD to prefix
         if USE_COLOR:
             displayed_str = prefix + colored_for_input(cwd, ["BLUE", "BOLD"]) + "$ "
         else:
             displayed_str = prefix + cwd + "$ "
-        
+
         # Get user input
         try:
             inpt = input(displayed_str)
-        except KeyboardInterrupt: # for ctrl+c
+        except KeyboardInterrupt:  # for ctrl+c
             print("")
             continue
         stripped_inpt = inpt.strip()
-        
+
         if stripped_inpt in EXIT_CMDS:
-            return # exit...
+            return  # exit...
 
         # Handle quick cases
         if not is_interesting_cmd(inpt):
-            continue  
+            continue
 
-        # Get file from lambda
+            # Get file from lambda
         if stripped_inpt.startswith("!gt"):
             handle_getfile(stripped_inpt, lambda_addr, cwd)
 
@@ -135,13 +135,14 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
                 cmd = inpt
 
             # Warp command with bash and send to lambda
-            bash_cmd =  ["bash", "-c", cmd]
+            bash_cmd = ["bash", "-c", cmd]
             result, output = send_command(bash_cmd, lambda_addr)
             if result == LEXResult.LEX_EXCEPTION:
-                print_info("LEX (Lambda Executor) encountered an unexpected exception while handling the bash command:\n" + output)
+                print_info("LEX (Lambda Executor) encountered an unexpected exception while handling the bash command:\n"
+                           + output)
                 continue
-                
-            print(output, end = '')  # don't add newline
+
+            print(output, end='')  # don't add newline
 
             # Try tracking the CWD
             cwd = track_cwd(cwd, inpt, (result != LEXResult.OK), lambda_addr)
@@ -160,7 +161,7 @@ def init_shell_params(lambda_addr):
     else:
         usr = ""
         print_info("Failed to get user name")
-    
+
     # Get lambda default CWD
     result, output = get_pwd(lambda_addr)
     if result == LEXResult.OK:
@@ -179,22 +180,23 @@ def check_is_new_fs_instance(indicator_path, lambda_addr):
     stat_cmd = ["stat", indicator_path]
     result, output = send_command(stat_cmd, lambda_addr)
     if result == LEXResult.OK:
-        return SAME_FS, CONT_FSTRACK # Indicator file exists
+        return SAME_FS, CONT_FSTRACK  # Indicator file exists
     if result == LEXResult.LEX_EXCEPTION:
         print_info("Failed to stat filesystem state file, from here on FS tracking is disabled. Exception:\n" + output)
-        return SAME_FS, STOP_FSTRACK # We return SAME_FS so nothing will be printed aside from the error message
+        return SAME_FS, STOP_FSTRACK  # We return SAME_FS so nothing will be printed aside from the error message
 
     # Ok so new instance, lets create the indicator
     cmd = "touch " + indicator_path
-    bash_cmd =  ["bash", "-c", cmd]
+    bash_cmd = ["bash", "-c", cmd]
     result, output = send_command(bash_cmd, lambda_addr)
 
     # Check if creating indicator file failed
     if result != LEXResult.OK:
         print_info("Failed to create a new indicator file, from here on FS tracking is disabled. Error : " + output)
-        return NEW_FS, STOP_FSTRACK # new fs, creating indicator failed
+        return NEW_FS, STOP_FSTRACK  # new fs, creating indicator failed
 
     return NEW_FS, CONT_FSTRACK  # new fs, creating indicator succeeded
+
 
 def handle_getfile(inpt, lambda_addr, cwd):
     args = inpt.split(' ')
@@ -229,32 +231,33 @@ def handle_putfile(inpt, lambda_addr, cwd):
     else:
         putfile(lambda_path, local_path, READ, WRITE, lambda_addr)
 
-        
-# Recieves file from Lambda. Prints outcome. No return value
+
+# Receives file from Lambda. Prints outcome. No return value
 def getfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
     print_info("Getting file {}, for large files this might take a few seconds...".format(lambda_path))
     result, output = send_getfile_command(lambda_path, read_mode, lambda_addr)
 
     # LEXResult.ERR is for known errors (i.e. file doesn't exist)
     if result == LEXResult.ERR:
-        print_info(output)  
-    # LEX encountered and unexpected exception
+        print_info(output)
+        # LEX encountered and unexpected exception
     elif result == LEXResult.LEX_EXCEPTION:
-        print_info("LEX (Lambda Executor) encountered an unexpected exception while handling the getfile command:\n" + output)
+        print_info(
+            "LEX (Lambda Executor) encountered an unexpected exception while handling the getfile command:\n" + output)
 
-    else:        
+    else:
         # If we received a compressed version, change to binary write mode
         if result == LEXResult.OK_TAR:
             local_path += ".tar"
-            write_mode = WRITE_BINARY 
-        
-        # Decode the base64 output
+            write_mode = WRITE_BINARY
+
+            # Decode the base64 output
         decoded_output = base64.b64decode(str(output))
         if write_mode == WRITE:
-            decoded_output = decoded_output.decode("utf-8") # convert to string if non-binary write
+            decoded_output = decoded_output.decode("utf-8")  # convert to string if non-binary write
 
-        try:   
-            writefile(local_path, write_mode, decoded_output) # write received file
+        try:
+            writefile(local_path, write_mode, decoded_output)  # write received file
         except IOError:
             print_info("Couldn't open local file {} for writing".format(local_path))
             return
@@ -263,7 +266,8 @@ def getfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
         if result == LEXResult.OK:
             print_info("Copied {} from the Lambda to {} on the local machine".format(lambda_path, local_path))
         else:
-            print_info("Compressed (bz2) and copied {} from the Lambda to {} on the local machine".format(lambda_path, local_path))
+            print_info("Compressed (bz2) and copied {} from the Lambda to {} on the local machine".format(lambda_path,
+                                                                                                          local_path))
 
 
 # Sends file to Lambda. Prints outcome. No return value
@@ -276,7 +280,8 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
     try:
         content = readfile(local_path, read_mode)
     except UnicodeDecodeError:
-        print_info("[!] putfile: reading file {} failed with UnicodeDecodeError, consider binary mode (use !ptb)".format(local_path))
+        print_info("[!] putfile: reading file {} failed with UnicodeDecodeError, consider binary mode (use !ptb)".format(
+                local_path))
         return
     except IOError as e:
         print_info("[!] putfile: reading file {} failed with IOError:" + str(e))
@@ -284,7 +289,7 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
 
     # b64 encode
     if type(content) == str:
-        content = bytes(content.encode("utf8")) # b64encode only accepts bytes
+        content = bytes(content.encode("utf8"))  # b64encode only accepts bytes
     encoded = base64.b64encode(content).decode('utf8')
     is_tar = False
 
@@ -293,14 +298,14 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
     del content
 
     # Check if file too big
-    if len(encoded) >= MAX_BODY_SIZE:   
+    if len(encoded) >= MAX_BODY_SIZE:
         # file too big, let's try to tar it
         del encoded
 
         print_info("File is too big, trying to compress it, might take a minute...")
 
         # Create temp tar file
-        tar_path =  "/tmp/" + os.path.basename(local_path) + ".tar"
+        tar_path = "/tmp/" + os.path.basename(local_path) + ".tar"
         create_tar_file(local_path, tar_path)
 
         # Read from temp tar and then delete it
@@ -312,13 +317,13 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
         if len(tar_encoded) >= MAX_BODY_SIZE:
             # still too big..
             print_info("[!] File still too big! size {}, b64 encoded size {}, tar size {}, b64 encoded tar size {}".format(
-                                content_len, encoded_len, len(tar_content), len(tar_encoded)))
+                    content_len, encoded_len, len(tar_content), len(tar_encoded)))
             return
 
         # Adjust params for tar file
         lambda_path += ".tar"
         encoded = tar_encoded
-        write_mode = WRITE_BINARY # tar is a bin
+        write_mode = WRITE_BINARY  # tar is a bin
         is_tar = True
 
     # Send file
@@ -330,7 +335,7 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
     elif result == LEXResult.LEX_EXCEPTION:
         print_info("LEX (Lambda Executor) encountered an unexpected exception while handling the putfile command:\n" + output)
         return
-    
+
     # Prints success
     if not is_tar:
         print_info("Copied {} from the local machine to {} on the lambda".format(local_path, lambda_path))
@@ -343,23 +348,24 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
     * A simple attempt to track CWD
     * Returns the new CWD if all goes well, or EMPTY_CWD if failed to track.
     """
-    if ("cd " not in inpt) or err: 
+    if ("cd " not in inpt) or err:
         # no need to track if not cd command or if command failed 
         return previous_cwd
 
     # OK, so we just run a successful cd command, let's try to find the new CWD
-    
+
     # Can't track if the cd command contained shell control chars
-    if contains_shell_control_chars(inpt): 
+    if contains_shell_control_chars(inpt):
         print_info("You entered a 'cd' command with shell control chars, this breaks cwd tracking. Do not trust the CWD displayed")
         return EMPTY_CWD
 
     cd_arg = inpt.split("cd")[1].strip()
     # easy case
-    if is_abs_path(cd_arg): # if someone does something annoying like 'cd /tmp/../home' we won't sanitize it will be presented as the CWD.
-        return trim_redundant_slashes(cd_arg) 
+    if is_abs_path(cd_arg):
+        # if someone does something annoying like 'cd /tmp/../home' we won't sanitize it will be presented as the CWD
+        return trim_redundant_slashes(cd_arg)
 
-    # Ok this is a relative path
+        # Ok this is a relative path
     else:
         # Handle common case of ..
         if cd_arg == "..":
@@ -370,9 +376,8 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
         if '.' not in cd_arg and '~' not in cd_arg:
             return trim_redundant_slashes(new_cwd)
 
-
         # cd command used either  '..', '.' or '~'. Let's let Bash on the lambda resolve that
-        result, pwd_output = get_pwd(lambda_addr, cd_target=new_cwd) 
+        result, pwd_output = get_pwd(lambda_addr, cd_target=new_cwd)
         if result == LEXResult.OK:
             return pwd_output.rstrip()
         else:
@@ -382,18 +387,18 @@ def track_cwd(previous_cwd, inpt, err, lambda_addr):
 
 # Get Lambda user
 def get_whoami(lambda_addr):
-    whoami_cmd =  ["whoami"]
+    whoami_cmd = ["whoami"]
     result, output = send_command(whoami_cmd, lambda_addr)
     return result, output
 
 
 # Runs pwd on the Lambda
 def get_pwd(lambda_addr, cd_target=""):
-    if cd_target: # option to cd first, mainly to let bash resolve '..', '.', etc.
+    if cd_target:  # option to cd first, mainly to let bash resolve '..', '.', etc.
         cmd = "cd " + cd_target + " ; pwd"
     else:
         cmd = "pwd"
-    bash_cmd =  ["bash", "-c", cmd]
+    bash_cmd = ["bash", "-c", cmd]
     result, output = send_command(bash_cmd, lambda_addr)
     return result, output
 
@@ -416,11 +421,11 @@ def handle_not_shell_use_cases():
     # Config
     elif argv[1] == CONFIG:
         # if no config cmd specified, print config
-        if len(argv) == 2: 
+        if len(argv) == 2:
             print_config()
             return
-        
-        config_cmd = argv[2] # get config cmd
+
+        config_cmd = argv[2]  # get config cmd
 
         if config_cmd not in CONFIG_CMDS:
             if config_cmd in HELP:
@@ -428,7 +433,7 @@ def handle_not_shell_use_cases():
             else:
                 print(INVALID_CONFIG_CMD.format(config_cmd))
                 print(USAGE)
-            return 
+            return
 
         if len(argv) == 3:
             print(CONFIG_PARAM_MISSING.format(config_cmd))

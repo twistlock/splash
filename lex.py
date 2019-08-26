@@ -1,10 +1,10 @@
 import subprocess
 import json
-import os 
+import os
 import base64
 from traceback import format_tb
 
-from lib.general_utils import * 
+from lib.general_utils import *
 
 READ_BINARY = "rb"
 WRITE = "w"
@@ -15,10 +15,11 @@ if "LEX_TRACE" in os.environ:
     if os.environ["LEX_TRACE"] == "True":
         INCLUDE_TRACEBACK_IN_RESPONSE = True
 
-
 """
 * Handler
 """
+
+
 def handler(event, context):
     print("[+] LEX: Starting...")
 
@@ -29,7 +30,7 @@ def handler(event, context):
         if action == CMD_ACTION:
             return_code, out = run_cmd(data)
             return construct_cmd_response(return_code, out)
-        
+
         # Get file 
         elif action == GETFILE_ACTION:
             if "file" not in data or "mode" not in data:
@@ -39,7 +40,7 @@ def handler(event, context):
 
         # Put file
         elif action == PUTFILE_ACTION:
-            if "path" not in data or "content" not in data or "mode" not in data: 
+            if "path" not in data or "content" not in data or "mode" not in data:
                 return construct_response(LEXResult.ERR, "[!] Put file request should contain path, content and mode")
             result, out = run_putfile(data["path"], data["content"], data["mode"])
             return construct_putfile_response(result, out)
@@ -47,7 +48,6 @@ def handler(event, context):
 
     except Exception as e:
         return construct_exception_response(e)
-        
 
 
 def parse_action(event):
@@ -66,7 +66,7 @@ def parse_action(event):
                 return CMD_ACTION, body[CMD_ACTION]
             else:
                 raise Exception("[!] parse_action: cmd request does not include a command")
-        
+
         elif body[ACTION] == GETFILE_ACTION:
             if GETFILE_ACTION in body:
                 return GETFILE_ACTION, body[GETFILE_ACTION]
@@ -82,8 +82,6 @@ def parse_action(event):
 
     else:
         raise Exception("[!] parse_action: Request does not include an action")
-
-
 
 
 def run_cmd(cmd):
@@ -112,15 +110,15 @@ def run_getfile(file, mode):
         encoded = base64.b64encode(content)
 
         if len(encoded) < MAX_BODY_SIZE:
-            return LEXResult.OK, encoded 
+            return LEXResult.OK, encoded
 
-        # file too big, let's try to compress it
+            # file too big, let's try to compress it
         content_len = len(content)
         encoded_len = len(encoded)
-        del content, encoded    # delete large vars
+        del content, encoded  # delete large vars
 
         # Create tar file
-        tar_path =  "/tmp/" + os.path.basename(file) + ".tar"
+        tar_path = "/tmp/" + os.path.basename(file) + ".tar"
         create_tar_file(file, tar_path)
 
         # Read tar file and then delete it
@@ -133,23 +131,24 @@ def run_getfile(file, mode):
             return LEXResult.OK_TAR, tar_encoded
 
     except UnicodeDecodeError:
-        return LEXResult.ERR, "run_getfile: reading file failed with UnicodeDecodeError, consider reading in binary mode (!gtb)"
+        err_str = "run_getfile: reading file failed with UnicodeDecodeError, consider reading in binary mode (!gtb)"
+        return LEXResult.ERR, err_str
     except IOError as e:
         return LEXResult.ERR, repr(e)
 
     # File too big....
-    err_str =  "[!] File to big! size {}, encoded size {}, tar size {}, encoded tar size {}".format(\
+    err_str = "[!] File to big! size {}, encoded size {}, tar size {}, encoded tar size {}".format( \
         content_len, encoded_len, len(tar_content), len(tar_encoded))
     return LEXResult.ERR, err_str
 
+
 # returns LEXResult, output
 def run_putfile(path, content, writemode):
-
     decoded = base64.b64decode(str(content))
 
     # If not binary write, convert decoded into a string
-    if writemode == WRITE: 
-        decoded = decoded.decode("utf8") 
+    if writemode == WRITE:
+        decoded = decoded.decode("utf8")
 
     try:
         # Write the received file
@@ -160,31 +159,31 @@ def run_putfile(path, content, writemode):
     return LEXResult.OK, None
 
 
-
 def construct_cmd_response(return_code, output):
     if return_code == 0:
         result = LEXResult.OK
     else:
         result = LEXResult.ERR
-    
-    return construct_response(result, output.decode("utf8"))  
+
+    return construct_response(result, output.decode("utf8"))
 
 
 def construct_getfile_response(result, output):
-    if result != LEXResult.ERR: 
-        output = output.decode("ascii") # if an err didn't occur, the output is base64 bytes. Let's convert into base64 string.
-        
-    return construct_response(result, output) 
+    if result != LEXResult.ERR:
+        # if an err didn't occur, the output is base64 bytes. Let's convert into base64 string
+        output = output.decode("ascii")
+
+    return construct_response(result, output)
 
 
 def construct_putfile_response(result, output):
-    return construct_response(result, output) 
+    return construct_response(result, output)
 
 
 def construct_exception_response(exception):
     if INCLUDE_TRACEBACK_IN_RESPONSE:
         # Prefix exception with traceback info
-        display_exception = "LEX Traceback:\n" 
+        display_exception = "LEX Traceback:\n"
         for trace in format_tb(exception.__traceback__):
             display_exception += trace
 
@@ -193,15 +192,14 @@ def construct_exception_response(exception):
 
     display_exception += str(repr(exception))
 
-    return construct_response(LEXResult.LEX_EXCEPTION, display_exception) 
+    return construct_response(LEXResult.LEX_EXCEPTION, display_exception)
 
 
 def construct_response(result, output):
     response = {
         "isBase64Encoded": False,
-        "statusCode" : 200,
-        "headers" : {"Content-Type" : "text/plain"},
-        "body" : json.dumps({"result": result.value, "output": output})
+        "statusCode": 200,
+        "headers": {"Content-Type": "text/plain"},
+        "body": json.dumps({"result": result.value, "output": output})
     }
-    return response 
-
+    return response

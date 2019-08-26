@@ -17,7 +17,6 @@ def send_getfile_command(file, mode, lambda_addr):
     return result, output
 
 
-
 def send_putfile_command(path, content, writemode, lambda_addr):
     post_data = {"action": PUTFILE_ACTION, PUTFILE_ACTION: {"path": path, "content" : content, "mode" : writemode} }
     response = requests.post(lambda_addr, json=post_data)

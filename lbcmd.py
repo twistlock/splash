@@ -5,9 +5,8 @@ from lib.config import get_lambda_addr
 from sys import argv
 import requests
 
+DEFAULT_LAMBDA_ADDR = ""  # set if needed
 
-
-DEFAULT_LAMBDA_ADDR = ""   # set if needed
 
 def main():
     """
@@ -18,7 +17,9 @@ def main():
     lambda_addr = get_lambda_addr()
     if not lambda_addr:
         if not DEFAULT_LAMBDA_ADDR:
-            print("[!] Lambda address isn't set. Run 'splash config <lambda-addr>' or overwrite DEFAULT_LAMBDA_ADDR in this file ({}).".format(argv[0]))
+            print(
+                "[!] Lambda address isn't set. Run 'splash config <lambda-addr>' or overwrite DEFAULT_LAMBDA_ADDR in this file ({}).".format(
+                    argv[0]))
             return
         lambda_addr = DEFAULT_LAMBDA_ADDR
 
@@ -42,7 +43,6 @@ def main():
 def send_bash_command(cmd, lambda_addr):
     bash_cmd = ["bash", "-c", cmd]
     return send_command(bash_cmd, lambda_addr)
-
 
 
 if __name__ == "__main__":

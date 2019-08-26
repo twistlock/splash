@@ -10,13 +10,12 @@ CONTROL_CHARS = ";|&<>"
 # Get result and output from LEX's response
 def parse_result_and_output(response_json, func_name):
     if "result" not in response_json:
-         raise Exception("[!] {}: Lambda response body doesn't contain 'result'".format(func_name))
+        raise Exception("[!] {}: Lambda response body doesn't contain 'result'".format(func_name))
 
     if "output" not in response_json:
         raise Exception("[!] {}: Lambda response body doesn't contain 'output'".format(func_name))
 
     return LEXResult(response_json["result"]) , response_json["output"]
-
 
 
 # Checks if command has any meaningful chars
@@ -41,16 +40,17 @@ def is_abs_path(path):
         return True
     return False
 
+
 # trims redundant '/' from path 
 def trim_redundant_slashes(path):
     while (len(path) > 1) and (path[-1] == "/"):
         path = path[:-1]
     return path
 
+
 # Printable
 
 INFO_PREFIX = "# splash: "
-
 INVALID_CONFIG_CMD = "# Invalid config command: '{}'"
 CONFIG_PARAM_MISSING = "# Missing parameter for 'splash config {}'"
 
@@ -91,7 +91,7 @@ To support certain features splash will run simple commands on the Lambda behind
 \t-> splash config trackfs <true/false> - track resets of the filesystem (the writable dir at '/tmp'), slows splash significantly.  
 \t-> splash config color <true/false>   - enable/disable coloring
 
-""" + IN_SHELL_COMMANDS +  """
+""" + IN_SHELL_COMMANDS + """
 
 # Known Limitations:
 \t-> Currently only works with open API Gateway endpoints.

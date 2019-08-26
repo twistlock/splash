@@ -3,3 +3,4 @@ __pycache__/
 lib/__pycache__/
 stash/
 .DS_Store
+.idea/

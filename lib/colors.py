@@ -18,24 +18,24 @@ END_NON_PRINT_IGNORE = "\002"    # end of non-printable sequence
 
 # Formats a text according to the given attributes
 def colored(text, attributes):
-	formated = text
-	for attribute in attributes:
-		if attribute in VALID_ATTRIBUTES:
-			formated = VALID_ATTRIBUTES[attribute] + formated 
-		else:
-			raise KeyError("No such attribute '{}'".format(attribute))
-	return formated + ENDC
+    formated = text
+    for attribute in attributes:
+        if attribute in VALID_ATTRIBUTES:
+            formated = VALID_ATTRIBUTES[attribute] + formated
+        else:
+            raise KeyError("No such attribute '{}'".format(attribute))
+    return formated + ENDC
 
 # Formats a text according to the given attributes
 # Wraps ANSI codes with non-printable delimiters 
 def colored_for_input(text, attributes):
-	formated = text
-	for attribute in attributes:
-		if attribute in VALID_ATTRIBUTES:
-			formated = START_NON_PRINT_IGNORE + VALID_ATTRIBUTES[attribute] + END_NON_PRINT_IGNORE + formated 
-		else:
-			raise KeyError("No such attribute '{}'".format(attribute))
-	return formated + START_NON_PRINT_IGNORE + ENDC + END_NON_PRINT_IGNORE
+    formated = text
+    for attribute in attributes:
+        if attribute in VALID_ATTRIBUTES:
+            formated = START_NON_PRINT_IGNORE + VALID_ATTRIBUTES[attribute] + END_NON_PRINT_IGNORE + formated
+        else:
+            raise KeyError("No such attribute '{}'".format(attribute))
+    return formated + START_NON_PRINT_IGNORE + ENDC + END_NON_PRINT_IGNORE
 
 
 
@@ -43,10 +43,10 @@ def colored_for_input(text, attributes):
 For testing only
 """
 if __name__ == "__main__":
-	print("Testing mode (:")
-	head = colored("zzz", ["HEADER"])
-	print(list(head))
-	print(head)
+    print("Testing mode (:")
+    head = colored("zzz", ["HEADER"])
+    print(list(head))
+    print(head)
 
 
 """

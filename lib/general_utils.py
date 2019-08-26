@@ -9,7 +9,7 @@ import os
 from enum import Enum
 
 MAX_PAYLOAD_SIZE = 6291456  # 6MB
-MAX_BODY_SIZE = MAX_PAYLOAD_SIZE - 500 # give some room for our headers
+MAX_BODY_SIZE = MAX_PAYLOAD_SIZE - 500  # give some room for our headers
 
 
 class LEXResult(Enum):
@@ -17,12 +17,12 @@ class LEXResult(Enum):
     * Enum of possible results from LEX (Lambda Executor)
     
     """
-    OK = 1             # action successful
+    OK = 1  # action successful
 
-    ERR = 2            # for regular shell commands, indicates non-zero exit code. 
-                       # for file actions, indicates an expected error occurred (i.e. file doesn't exist on Lambda for a getfile operation)
+    ERR = 2  # for regular shell commands, indicates non-zero exit code.
+             # for file actions, indicates an expected error occurred (i.e. file doesn't exist on Lambda for a getfile operation)
 
-    OK_TAR = 3         # for file actions, indicates file transfer was successful and the file was compressed
+    OK_TAR = 3  # for file actions, indicates file transfer was successful and the file was compressed
 
     LEX_EXCEPTION = 4  # LEX raised an unexpected exception
 
@@ -41,9 +41,11 @@ def readfile(path, mode):
     with open(path, mode) as f:
         return f.read()
 
+
 def writefile(path, mode, data):
     with open(path, mode) as f:
         return f.write(data)
+
 
 def create_tar_file(inputfile, output_path):
     """
