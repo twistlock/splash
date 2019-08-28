@@ -43,7 +43,7 @@ WRITE = "w"
 
 def main(lambda_addr, try_to_fs_track):
     # Print welcome
-    print_info("Talking to <redacted>")  # {}".format(lambda_addr))
+    print_info("Talking to {}".format(lambda_addr))
     print_info("For help, enter '!help'")
 
     # Get Lambda's user and default working dir
