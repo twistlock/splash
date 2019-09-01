@@ -7,6 +7,7 @@ from .general_utils import ACTION, CMD_ACTION
 
 import requests
 import json
+from base64 import b64decode
 
 DEFAULT_LAMBDA_ADDR = ""  # set if needed
 
@@ -57,7 +58,15 @@ def send_command(args, lambda_addr):
     except json.decoder.JSONDecodeError as e:
         raise Exception("[!] send_command: Lambda response body isn't JSON decodeable") from e
 
-    result, output = parse_result_and_output(resp_json, "send_command")
+    result, output_b64 = parse_result_and_output(resp_json, "send_command")
+    output = b64decode(bytes(output_b64, "ascii")) # LEX encodes the command's output in base64
+
+    # Try to convert output to string
+    try:
+        output = output.decode("utf8")
+    except UnicodeDecodeError:
+        pass
+
     return result, output
 
 

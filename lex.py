@@ -165,7 +165,8 @@ def construct_cmd_response(return_code, output):
     else:
         result = LEXResult.ERR
 
-    return construct_response(result, output.decode("utf8"))
+    output_b64 = base64.b64encode(output).decode("ascii")
+    return construct_response(result, output_b64)  
 
 
 def construct_getfile_response(result, output):

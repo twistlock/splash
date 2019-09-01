@@ -142,7 +142,7 @@ def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking)
                            + output)
                 continue
 
-            print(output, end='')  # don't add newline
+            print(decode_output(output), end='')  # don't add newline
 
             # Try tracking the CWD
             cwd = track_cwd(cwd, inpt, (result != LEXResult.OK), lambda_addr)
@@ -196,6 +196,14 @@ def check_is_new_fs_instance(indicator_path, lambda_addr):
         return NEW_FS, STOP_FSTRACK  # new fs, creating indicator failed
 
     return NEW_FS, CONT_FSTRACK  # new fs, creating indicator succeeded
+
+
+def decode_output(output):
+    # If output is still bytes, it means it isn't Unicode compatible
+    # The best we can do is remove the b'' wrapping
+    if type(output) is bytes:
+        output = str(output)[2:-1]
+    return output
 
 
 def handle_getfile(inpt, lambda_addr, cwd):
