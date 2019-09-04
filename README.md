@@ -33,7 +33,7 @@ $ pip3 install requests
 ```
 $ git clone https://github.com/twistlock/splash && cd splash
 
-# Deploy ./deploy/lex.zip to an AWS Lambda through the aws CLI or the web UI.
+# Deploy ./deploy/aws/python3.7/lex.zip to an AWS Lambda through the aws CLI or the web UI.
 # set Runtime:Python3.7, Handler:lex.handler, timeout:2min, and add an API Gateway trigger.
 
 $ ./splash.py config addr <Lambda-addr>
@@ -45,8 +45,11 @@ $ ./splash.py  # run splash
  - **LEX** (Lambda Executor) - the Lambda function that executes splash's commands
  - lbcmd.py - a simple utility for running bash commands on Lambdas
  - lib - python modules
- - deploy/lex.zip - a Lambda python package containing `lex.py` and `lib/general_utils.py`. 
+ - deploy/aws/python3.7/lex.zip - a Lambda python package containing `lex.py` and `lib/general_utils.py`. 
+ - deploy/gcp - experimental support for Google Functions
 
+# Other Platforms
+Experimental support for Google Python3.7 Functions. To try, deploy `deploy/gcp/python3.7/gcp_lex.py` to a function and set the function's handler to `handler`.
 
 # Help
 ```
