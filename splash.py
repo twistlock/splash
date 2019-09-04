@@ -292,7 +292,7 @@ def putfile(lambda_path, local_path, read_mode, write_mode, lambda_addr):
                 local_path))
         return
     except IOError as e:
-        print_info("[!] putfile: reading file {} failed with IOError:" + str(e))
+        print_info("[!] putfile: reading file {} failed with IOError: ".format(local_path) + str(e))
         return
 
     # b64 encode
