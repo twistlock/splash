@@ -75,8 +75,8 @@ def main(lambda_addr, try_to_fs_track):
 def shell_loop(lambda_addr, usr, cwd, lambda_original_cwd, continue_fs_tracking):
     is_new_fs_instance = False  # for first time in loop
 
-    # Construct shell prefix as'USR@MACHINE:CWD$ '
-    lambda_name = lambda_addr.split("/")[-1]
+    # Construct shell prefix as'USR@LAMBDANAME:CWD$ '
+    lambda_name = extract_lambda_name(lambda_addr)
     if USE_COLOR:
         prefix = colored_for_input(usr + "@" + lambda_name, ["GREEN", "BOLD"]) + ":"
     else:

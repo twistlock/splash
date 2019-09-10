@@ -41,11 +41,24 @@ def is_abs_path(path):
     return False
 
 
-# trims redundant '/' from path 
+# Trims redundant '/' from path 
 def trim_redundant_slashes(path):
     while (len(path) > 1) and (path[-1] == "/"):
         path = path[:-1]
     return path
+
+
+# Returns the Lambda's name
+def extract_lambda_name(lambda_addr):
+    if "/" not in lambda_addr:
+        return lambda_addr
+        
+    suffix = lambda_addr.split("/")[-1]
+    if "azure" not in lambda_addr or '?' not in suffix:
+        return suffix
+
+    return suffix.split("?")[0]  # Azure adds some junk after the function's name 
+
 
 
 # Printable
