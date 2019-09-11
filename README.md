@@ -47,9 +47,12 @@ $ ./splash.py  # run splash
  - lib - python modules
  - deploy/aws/python3.7/lex.zip - a Lambda python package containing `lex.py` and `lib/general_utils.py`. 
  - deploy/gcp - experimental support for Google Functions
+ - deploy/azure - experimental support for Azure Functions
 
 # Other Platforms
-Experimental support for Google Python3.7 Functions. To try, deploy `deploy/gcp/python3.7/gcp_lex.py` to a function and set the function's handler to `handler`.
+1. Experimental support for **Google Python3.7 Functions**. To try, deploy `deploy/gcp/python3.7/gcp_lex.zip` to a function and set the function's handler to `handler`.
+
+2. Experimental support for **Azure Python3 Functions**. To try, deploy the function app at `deploy/azure/python3`. This Function App contains one function, `lex_func`, which is the LEX agent. To deploy, you can create a Function App via the Azure Portal UI, and then deploy the LEX Function App through the Azure CLI by running `cd deploy/azure/python3; func azure functionapp publish <APP_NAME> --build remote`.
 
 # Help
 ```
