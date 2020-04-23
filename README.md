@@ -63,8 +63,8 @@ $ ./splash.py  # run splash
 /____/plash /_/seudo    /_____/   /_/  |_|mbda /____/    /_/ /_/ell  
 
 A pseudo shell re-invoking the Lambda for each command.
-\t -> SPLASH runs on your local machine.
-\t -> LEX (Lambda Executor) should run on your Lambda.
+  -> SPLASH runs on your local machine.
+  -> LEX (Lambda Executor) should run on your Lambda.
 
 To support certain features splash will run simple commands on the Lambda behind the scenes
 (e.g. 'whoami' to get the user name)
