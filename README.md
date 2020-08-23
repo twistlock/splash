@@ -11,17 +11,17 @@ For curious fellows who want to hack on AWS Lambda's infrastructure.
 
 ![](demo/splash.gif)
 
-# Features
+## Features
 - Supports CWD
 - File transfers between the local machine and the Lambda
 - Tracking Lambda writable file system (/tmp) resets 
 - Pretty colors
 
-# Why Not a Reverse Shell
+## Why Not a Reverse Shell
 Lambda is priced according to run time. A reverse shell running for a couple of minutes will be costly.
 Additionally, after some time the Lambda will timeout and the reverse shell connection will be closed.
 
-# Getting Started
+## Getting Started
 **Dependencies**
 
 Python3, requests.
@@ -40,21 +40,17 @@ $ ./splash.py config addr <Lambda-addr>
 $ ./splash.py  # run splash
 ```
 
-# Components
- - **SPLASH** - the shell
- - **LEX** (Lambda Executor) - the Lambda function that executes splash's commands
- - lbcmd.py - a simple utility for running bash commands on Lambdas
- - lib - python modules
- - deploy/aws/python3.7/lex.zip - a Lambda python package containing `lex.py` and `lib/general_utils.py`. 
- - deploy/gcp - experimental support for Google Functions
- - deploy/azure - experimental support for Azure Functions
+## Components
+ - **splash.py** - the shell.
+ - **lex.py** (Lambda Executor) - the Lambda function that executes splash's commands.
+ - deploy/aws/python3.7/lex.zip - a Lambda python package containing lex. 
 
-# Other Platforms
+## Other Platforms
 1. Experimental support for **Google Python3.7 Functions**. To try, deploy `deploy/gcp/python3.7/gcp_lex.zip` to a function and set the function's handler to `handler`.
 
 2. Experimental support for **Azure Python3 Functions**. To try, deploy the function app at `deploy/azure/python3`. This Function App contains one function, `lex_func`, which is the LEX agent. To deploy, you can use the Azure Portal UI to create an empty Linux Python Function App, and then deploy the LEX Function App through the Azure CLI by running: `cd deploy/azure/python3; func azure functionapp publish <APP_NAME> --build remote`.
 
-# Help
+## Help
 ```
    _____        ____        __        ___         _____      __  __   
   / ___/       / __ \      / /       /   |       / ___/     / / / /   
@@ -95,5 +91,5 @@ To support certain features splash will run simple commands on the Lambda behind
     * splash can get 'stuck' in a deleted directory, run 'cd' to reset CWD
 ```
 
-# TODO
+### TODO
 - Add support for API Gateway authentication (API Key, IAM)
